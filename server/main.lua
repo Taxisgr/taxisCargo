@@ -2,6 +2,7 @@ ESX = nil
 LastDelivery = 0.0
 isCooldownActive = false
 cooldownDuration = Config.Cooldown * 60 * 1000 -- 1 hour in milliseconds
+discordWebhook = "WEBHOOK" --Change this to your own discord webhook
 
 ESX = exports["es_extended"]:getSharedObject()
 
@@ -30,6 +31,15 @@ function GetCopsOnline()
 end
 
 
+
+function SendDiscordLog(message)
+
+    local logData = {
+        ["content"] = message
+    }
+
+    PerformHttpRequest(discordWebhook, function(err, text, headers) end, 'POST', json.encode(logData), { ['Content-Type'] = 'application/json' })
+end
 
 RegisterServerEvent('taxisCargo:resetEvent')
 AddEventHandler('taxisCargo:resetEvent', function()
@@ -73,6 +83,9 @@ ESX.RegisterServerCallback('taxisCargo:sellCargo', function(source, cb, scenario
 		end
 
 		TriggerClientEvent('esx:showNotification', source, "You earned the rewards from the cargo.")
+		local playerName = GetPlayerName(source)
+		local discordmsg = playerName .. " with id " .. source.. " earned cargo rewards from completing the number " ..#selectedScenario + 1 .. " cargo mission successfully"
+		SendDiscordLog(discordmsg)
 		cb(true)
 	else
 		print("Something went wrong with the delivery of the cargo. Please contact the staff team")
@@ -109,7 +122,9 @@ ESX.RegisterServerCallback('taxisCargo:buyCargo', function(source, cb, price)
 			if xPlayer.getAccount('black_money').money >= price then
 
 				xPlayer.removeAccountMoney('black_money', price)
-
+				local playerName = GetPlayerName(source)
+				local discordmsg = playerName .. " with id " .. source.. " bought the " .. price .. "$ cargo mission successfully"
+				SendDiscordLog(discordmsg)
 				LastDelivery = os.time()
 
 				cb(true)
@@ -126,7 +141,9 @@ ESX.RegisterServerCallback('taxisCargo:buyCargo', function(source, cb, price)
 				if xPlayer.getMoney() >= price then
 
 				xPlayer.removeMoney(price)
-
+				local playerName = GetPlayerName(source)
+				local discordmsg = playerName .. " with id " .. source.. " bought the " .. price .. "$ cargo mission successfully"
+				SendDiscordLog(discordmsg)
 				LastDelivery = os.time()
 
 				cb(true)
